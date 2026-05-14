@@ -27,6 +27,21 @@ const registerSchema = z
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+function getRegisterErrorMessage(error: { code?: string; message?: string }) {
+  if (
+    error.code === "over_email_send_rate_limit" ||
+    error.message?.toLowerCase().includes("email rate limit")
+  ) {
+    return "O limite de envio de emails do Supabase foi atingido. Aguarde alguns minutos e tente novamente.";
+  }
+
+  if (error.message?.toLowerCase().includes("already registered")) {
+    return "Este email ja esta cadastrado. Tente entrar na sua conta.";
+  }
+
+  return "Nao foi possivel criar sua conta agora.";
+}
+
 export function RegisterForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -58,7 +73,7 @@ export function RegisterForm() {
       });
 
       if (error) {
-        setFormError("Nao foi possivel criar sua conta agora.");
+        setFormError(getRegisterErrorMessage(error));
         return;
       }
 
